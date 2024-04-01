@@ -1,0 +1,8 @@
+{
+    "name": "Wallbox Component",
+    "homeassistant": "2023.3.3",
+    "render_readme": true,
+    "hacs": "1.6.0",
+    "domains": ["lock", "number", "sensor", "switch"],
+    "iot_class": "Cloud Polling"
+}
