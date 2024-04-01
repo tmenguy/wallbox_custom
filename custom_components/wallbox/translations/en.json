@@ -4,14 +4,14 @@
       "user": {
         "data": {
           "station": "Station Serial Number",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "username": "User Name",
+          "password": "Password"
         }
       },
       "reauth_confirm": {
         "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "username": "User Name",
+          "password": "Password"
         }
       }
     },
