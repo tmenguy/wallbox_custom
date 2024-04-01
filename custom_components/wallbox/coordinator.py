@@ -8,7 +8,10 @@ import logging
 from typing import Any, Concatenate, ParamSpec, TypeVar
 
 import requests
-from wallbox import Wallbox
+try:
+    from .wallbox import Wallbox
+except Exception:
+    from wallbox import Wallbox
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError

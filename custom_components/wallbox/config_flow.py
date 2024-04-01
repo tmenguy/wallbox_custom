@@ -5,7 +5,11 @@ from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
-from wallbox import Wallbox
+
+try:
+    from .wallbox import Wallbox
+except Exception:
+    from wallbox import Wallbox
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME

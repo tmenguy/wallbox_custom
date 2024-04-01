@@ -1,7 +1,10 @@
 """The Wallbox integration."""
 from __future__ import annotations
 
-from wallbox import Wallbox
+try:
+    from .wallbox import Wallbox
+except Exception:
+    from wallbox import Wallbox
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
