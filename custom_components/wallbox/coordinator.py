@@ -89,9 +89,14 @@ def _require_authentication(
             self.authenticate()
             return func(self, *args, **kwargs)
         except requests.exceptions.HTTPError as wallbox_connection_error:
+            _LOGGER.debug("ISSUE AUTHENTICATING WALLBOX %s", wallbox_connection_error, exc_info=True)
             if wallbox_connection_error.response.status_code == HTTPStatus.FORBIDDEN:
                 raise ConfigEntryAuthFailed from wallbox_connection_error
             raise ConnectionError from wallbox_connection_error
+        except Exception as e:
+            _LOGGER.debug("ISSUE AUTHENTICATING WALLBOX: UNKNOWN",exc_info=True)
+            raise e
+
 
     return require_authentication
 
