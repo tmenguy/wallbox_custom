@@ -9,7 +9,15 @@ import logging
 from typing import Any, Concatenate, ParamSpec, TypeVar
 
 import requests
-from wallbox import Wallbox
+
+
+_LOGGER = logging.getLogger(__name__)
+
+try:
+    from wallbox.wallbox import Wallbox
+except Exception:
+    from wallbox import Wallbox
+    _LOGGER.debug("BAD WALLBOX IMPORT")
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
@@ -29,7 +37,7 @@ from .const import (
     ChargerStatus,
 )
 
-_LOGGER = logging.getLogger(__name__)
+
 
 # Translation of StatusId based on Wallbox portal code:
 # https://my.wallbox.com/src/utilities/charger/chargerStatuses.js
