@@ -5,9 +5,8 @@ default_config:
 logger:
   default: info
   logs:
-    custom_components.netatmo: debug
-    custom_components.netatmo.pyatmo: debug
-    custom_components.netatmo.pyatmo.modules: debug
+    custom_components.wallbox: debug
+    custom_components.wallbox.wallbox: debug
 # If you need to debug uncommment the line below (doc: https://www.home-assistant.io/integrations/debugpy/)
 #debugpy:
   #start: true
