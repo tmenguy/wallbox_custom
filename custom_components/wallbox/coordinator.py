@@ -145,7 +145,12 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         _LOGGER.debug("Get new sensor data for Wallbox component.")
         """Get new sensor data for Wallbox component."""
-        data: dict[str, Any] = self._wallbox.getChargerStatus(self._station)
+        try:
+            data: dict[str, Any] = self._wallbox.getChargerStatus(self._station)
+        except:
+            _LOGGER.debug("RETURN SAME DATA DUE TO ERROR Wallbox component.")
+            return self.data
+
         data[CHARGER_MAX_CHARGING_CURRENT_KEY] = data[CHARGER_DATA_KEY][
             CHARGER_MAX_CHARGING_CURRENT_KEY
         ]
