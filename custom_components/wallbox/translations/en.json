@@ -29,7 +29,7 @@
   "entity": {
     "lock": {
       "lock": {
-        "name": "[%key:component::lock::title%]"
+        "name": "Lock"
       }
     },
     "number": {
