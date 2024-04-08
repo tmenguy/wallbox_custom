@@ -116,6 +116,22 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
 
+    @property
+    def update_interval(self) -> timedelta | None:
+        """Interval between updates."""
+        _LOGGER.debug("WALLBOX UPDATE INTERVAL GET %s", self._update_interval)
+        return self._update_interval
+
+    @update_interval.setter
+    def update_interval(self, value: timedelta | None) -> None:
+        """Set interval between updates."""
+        _LOGGER.debug("WALLBOX UPDATE INTERVAL SETTER %s", value)
+        self._update_interval = value
+        self._update_interval_seconds = value.total_seconds() if value else None
+
+
+
+
     def authenticate(self) -> None:
         """Authenticate using Wallbox API."""
         _LOGGER.debug("Authenticating Wallbox connection.")
