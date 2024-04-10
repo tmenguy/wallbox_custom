@@ -165,7 +165,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             data: dict[str, Any] = self._wallbox.getChargerStatus(self._station)
         except:
-            _LOGGER.debug("RETURN SAME DATA DUE TO ERROR Wallbox component.")
+            _LOGGER.debug("RETURN SAME DATA DUE TO ERROR in Wallbox component.")
             return self.data
 
         data[CHARGER_MAX_CHARGING_CURRENT_KEY] = data[CHARGER_DATA_KEY][
