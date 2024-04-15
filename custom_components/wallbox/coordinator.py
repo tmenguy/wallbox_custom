@@ -13,7 +13,6 @@ try:
     from wallbox.wallbox import Wallbox
 except Exception:
     from wallbox import Wallbox
-    _LOGGER.debug("BAD WALLBOX IMPORT")
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
