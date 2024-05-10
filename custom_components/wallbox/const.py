@@ -3,7 +3,7 @@
 from enum import StrEnum
 
 DOMAIN = "wallbox"
-UPDATE_INTERVAL = 15
+UPDATE_INTERVAL = 10
 
 BIDIRECTIONAL_MODEL_PREFIXES = ["QS"]
 
