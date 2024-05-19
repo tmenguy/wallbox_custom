@@ -12,7 +12,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from .const import CONF_STATION, DOMAIN, UPDATE_INTERVAL
+from .const import CONF_STATION, DOMAIN, UPDATE_INTERVAL, API_TIMEOUT_S
 from .coordinator import InvalidAuth, WallboxCoordinator
 
 PLATFORMS = [Platform.LOCK, Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
@@ -24,6 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
         jwtTokenDrift=UPDATE_INTERVAL,
+        requestGetTimeout=API_TIMEOUT_S
     )
     wallbox_coordinator = WallboxCoordinator(
         entry.data[CONF_STATION],
