@@ -35,15 +35,12 @@ class Wallbox:
         return self._requestGetTimeout
 
     def authenticate(self):
-        self._authenticate(from_refresh=False)
-
-    def _authenticate(self, from_refresh=False):
         auth_path = "users/signin"
         auth = HTTPBasicAuth(self.username, self.password)
 
         ask_for_refresh = False
         # if already has token:
-        if from_refresh is False and self.jwtToken != "":
+        if self.jwtToken != "":
             # check if token is still valid
             if round((self.jwtTokenTtl / 1000) - self.jwtTokenDrift, 0) > datetime.timestamp(datetime.now()):
                 return
@@ -65,12 +62,16 @@ class Wallbox:
             )
             response.raise_for_status()
         except requests.exceptions.HTTPError as err:
-            if from_refresh or ask_for_refresh is False:
+            if ask_for_refresh is False:
                 raise(err)
-            #we need to redo a full "authentication" as the refresh token is probably no more valid or have an issue
-            #got this after running the integration for a while
-            self._authenticate(from_refresh=True)
-            return
+            else:
+                #we need to redo a full "authentication" as the refresh token is probably no more valid or have an issue
+                #got this after running the integration for a while
+                #force token reset, and recall authentication
+                self.jwtToken = ""
+                self.jwtRefreshToken = ""
+                self.authenticate()
+                return
 
         self.jwtToken = json.loads(response.text)["data"]["attributes"]["token"]
         self.jwtRefreshToken = json.loads(response.text)["data"]["attributes"]["refresh_token"]
@@ -82,7 +83,8 @@ class Wallbox:
         chargerIds = []
         try:
             response = requests.get(
-                f"{self.baseUrl}v3/chargers/groups", headers=self.headers,
+                f"{self.baseUrl}v3/chargers/groups",
+                headers=self.headers,
                 timeout=self._requestGetTimeout
             )
             response.raise_for_status()
@@ -96,7 +98,8 @@ class Wallbox:
     def getChargerStatus(self, chargerId):
         try:
             response = requests.get(
-                f"{self.baseUrl}chargers/status/{chargerId}", headers=self.headers,
+                f"{self.baseUrl}chargers/status/{chargerId}", 
+                headers=self.headers,
                 timeout=self._requestGetTimeout
             )
             response.raise_for_status()
@@ -110,7 +113,7 @@ class Wallbox:
                 f"{self.baseUrl}v2/charger/{chargerId}",
                 headers=self.headers,
                 data='{"locked":0}',
-                timeout=self._requestGetTimeout,
+                timeout=self._requestGetTimeout
             )
             response.raise_for_status()
         except requests.exceptions.HTTPError as err:
@@ -123,7 +126,7 @@ class Wallbox:
                 f"{self.baseUrl}v2/charger/{chargerId}",
                 headers=self.headers,
                 data='{"locked":1}',
-                timeout=self._requestGetTimeout,
+                timeout=self._requestGetTimeout
             )
             response.raise_for_status()
         except requests.exceptions.HTTPError as err:
@@ -136,7 +139,7 @@ class Wallbox:
                 f"{self.baseUrl}v2/charger/{chargerId}",
                 headers=self.headers,
                 data=f'{{ "maxChargingCurrent":{newMaxChargingCurrentValue}}}',
-                timeout=self._requestGetTimeout,
+                timeout=self._requestGetTimeout
             )
             response.raise_for_status()
         except requests.exceptions.HTTPError as err:
@@ -149,7 +152,7 @@ class Wallbox:
                 f"{self.baseUrl}v3/chargers/{chargerId}/remote-action",
                 headers=self.headers,
                 data='{"action":2}',
-                timeout=self._requestGetTimeout,
+                timeout=self._requestGetTimeout
             )
             response.raise_for_status()
         except requests.exceptions.HTTPError as err:
@@ -162,7 +165,7 @@ class Wallbox:
                 f"{self.baseUrl}v3/chargers/{chargerId}/remote-action",
                 headers=self.headers,
                 data='{"action":1}',
-                timeout=self._requestGetTimeout,
+                timeout=self._requestGetTimeout
             )
             response.raise_for_status()
         except requests.exceptions.HTTPError as err:
@@ -175,7 +178,7 @@ class Wallbox:
                 f"{self.baseUrl}v3/chargers/{chargerId}/remote-action",
                 headers=self.headers,
                 data='{"action":9}',
-                timeout=self._requestGetTimeout,
+                timeout=self._requestGetTimeout
             )
             response.raise_for_status()
         except requests.exceptions.HTTPError as err:
@@ -188,7 +191,7 @@ class Wallbox:
                 f"{self.baseUrl}v3/chargers/{chargerId}/remote-action",
                 headers=self.headers,
                 data='{"action":3}',
-                timeout=self._requestGetTimeout,
+                timeout=self._requestGetTimeout
             )
             response.raise_for_status()
         except requests.exceptions.HTTPError as err:
@@ -200,7 +203,9 @@ class Wallbox:
             payload = {'charger': chargerId, 'start_date': startDate.timestamp(), 'end_date': endDate.timestamp() }
 
             response = requests.get(
-                f"{self.baseUrl}v4/sessions/stats", params=payload, headers=self.headers,
+                f"{self.baseUrl}v4/sessions/stats",
+                params=payload,
+                headers=self.headers,
                 timeout=self._requestGetTimeout
             )
             response.raise_for_status()
@@ -214,7 +219,50 @@ class Wallbox:
                 f"{self.baseUrl}chargers/config/{chargerId}",
                 headers=self.headers,
                 json={'energyCost': energyCost},
-                timeout=self._requestGetTimeout,
+                timeout=self._requestGetTimeout
+            )
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as err:
+            raise (err)
+        return json.loads(response.text)
+
+
+    def setIcpMaxCurrent(self, chargerId, newIcpMaxCurrentValue):
+        try:
+            response = requests.post(
+                f"{self.baseUrl}chargers/config/{chargerId}",
+                headers=self.headers,
+                json={'icp_max_current': newIcpMaxCurrentValue},
+                timeout=self._requestGetTimeout
+            )
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as err:
+            raise (err)
+        return json.loads(response.text)
+
+    def getChargerSchedules(self, chargerId):
+        try:
+            response = requests.get(
+                f"{self.baseUrl}chargers/{chargerId}/schedules",
+                headers=self.headers,
+                timeout=self._requestGetTimeout
+            )
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as err:
+            raise (err)
+        return json.loads(response.text)
+
+    def setChargerSchedules(self, chargerId, newSchedules):
+        try:
+            # Enforce chargerId
+            for schedule in newSchedules.get('schedules', []):
+                schedule['chargerId'] = chargerId
+
+            response = requests.post(
+                f"{self.baseUrl}chargers/{chargerId}/schedules",
+                headers=self.headers,
+                json=newSchedules,
+                timeout=self._requestGetTimeout
             )
             response.raise_for_status()
         except requests.exceptions.HTTPError as err:
