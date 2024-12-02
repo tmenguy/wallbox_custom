@@ -4,7 +4,7 @@ from enum import StrEnum
 
 DOMAIN = "wallbox"
 UPDATE_INTERVAL = 10
-API_TIMEOUT_S = 5
+API_TIMEOUT_S = 7
 
 BIDIRECTIONAL_MODEL_PREFIXES = ["QS"]
 
