@@ -43,12 +43,28 @@
                 "name": "Maximum ICP current"
             }
         },
+        "select": {
+            "ecosmart": {
+                "name": "Solar charging",
+                "state": {
+                    "eco_mode": "Eco mode",
+                    "full_solar": "Full solar",
+                    "off": "Off"
+                }
+            }
+        },
         "sensor": {
             "added_discharged_energy": {
                 "name": "Discharged energy"
             },
             "added_energy": {
                 "name": "Added energy"
+            },
+            "added_green_energy": {
+                "name": "Added green energy"
+            },
+            "added_grid_energy": {
+                "name": "Added grid energy"
             },
             "added_range": {
                 "name": "Added range"
@@ -91,6 +107,11 @@
             "pause_resume": {
                 "name": "Pause/resume"
             }
+        }
+    },
+    "exceptions": {
+        "api_failed": {
+            "message": "Error communicating with Wallbox API"
         }
     }
 }

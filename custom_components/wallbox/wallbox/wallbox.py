@@ -24,6 +24,7 @@ class Wallbox:
         self.jwtRefreshToken = ""
         self.jwtTokenTtl = 0
         self.jwtRefreshTokenTtl = 0
+        self.jwtTokenRefreshRetries = 0
         self.headers = {
             "Accept": "application/json",
             "Content-Type": "application/json;charset=UTF-8",
@@ -38,7 +39,7 @@ class Wallbox:
         auth_path = "users/signin"
         auth = HTTPBasicAuth(self.username, self.password)
 
-        ask_for_refresh = False
+        token_refresh_ask = False
         # if already has token:
         if self.jwtToken != "":
             # check if token is still valid
@@ -51,7 +52,7 @@ class Wallbox:
                 # try to refresh token
                 auth_path = "users/refresh-token"
                 auth = BearerAuth(self.jwtRefreshToken)
-                ask_for_refresh = True
+                token_refresh_ask = True
 
         try:
             response = requests.get(
@@ -61,18 +62,23 @@ class Wallbox:
                 timeout=self._requestGetTimeout
             )
             response.raise_for_status()
-        except requests.exceptions.HTTPError as err:
-            if ask_for_refresh is False:
-                raise(err)
-            else:
-                #we need to redo a full "authentication" as the refresh token is probably no more valid or have an issue
-                #got this after running the integration for a while
-                #force token reset, and recall authentication
-                self.jwtToken = ""
-                self.jwtRefreshToken = ""
-                self.authenticate()
-                return
 
+        except requests.exceptions.HTTPError as err:
+            if token_refresh_ask:
+                if self.jwtTokenRefreshRetries > 3:
+                    # we got a refresh token HTTP error (not timeout nor anything else)
+                    # and we already tried to refresh the token 3 times
+                    self.jwtToken = ""
+                    self.jwtRefreshToken = ""
+                    self.jwtTokenTtl = 0
+                    self.jwtRefreshTokenTtl = 0
+                    self.jwtTokenRefreshRetries = 0
+                else:
+                    self.jwtTokenRefreshRetries += 1
+
+            raise (err)
+
+        self.jwtTokenRefreshRetries = 0
         self.jwtToken = json.loads(response.text)["data"]["attributes"]["token"]
         self.jwtRefreshToken = json.loads(response.text)["data"]["attributes"]["refresh_token"]
         self.jwtTokenTtl = json.loads(response.text)["data"]["attributes"]["ttl"]
@@ -98,7 +104,7 @@ class Wallbox:
     def getChargerStatus(self, chargerId):
         try:
             response = requests.get(
-                f"{self.baseUrl}chargers/status/{chargerId}", 
+                f"{self.baseUrl}chargers/status/{chargerId}",
                 headers=self.headers,
                 timeout=self._requestGetTimeout
             )
@@ -314,6 +320,57 @@ class Wallbox:
                 timeout=self._requestGetTimeout,
             )
             response.raise_for_status()
+        except requests.exceptions.HTTPError as err:
+            raise (err)
+        return response.status_code
+
+    def getPhaseSwitch(self, uid):
+         try:
+             response = requests.get(
+                 f"{self.baseUrl}v4/chargers/{uid}/phase-switch",
+                 headers=self.headers,
+                 timeout=self._requestGetTimeout,
+             )
+             response.raise_for_status()
+         except requests.exceptions.HTTPError as err:
+             raise (err)
+         return json.loads(response.text)
+
+    def enablePhaseSwitch(self, uid):
+        try:
+             response = requests.put(
+                 f"{self.baseUrl}v4/chargers/{uid}/phase-switch",
+                 headers=self.headers,
+                 json={
+                     "data": {
+                         "id": uid,
+                         "attributes": {"enabled": True},
+                         "type": "phase-switch"
+                     }
+                 },
+                 timeout=self._requestGetTimeout,
+             )
+             response.raise_for_status()
+        except requests.exceptions.HTTPError as err:
+            raise (err)
+        return response.status_code
+
+    def disablePhaseSwitch(self, uid):
+        try:
+            response = requests.put(
+             f"{self.baseUrl}v4/chargers/{uid}/phase-switch",
+             headers=self.headers,
+             json={
+                 "data": {
+                     "id": uid,
+                     "attributes": {"enabled": False},
+                     "type": "phase-switch"
+                 }
+             },
+             timeout=self._requestGetTimeout,
+            )
+            response.raise_for_status()
+
         except requests.exceptions.HTTPError as err:
             raise (err)
         return response.status_code
