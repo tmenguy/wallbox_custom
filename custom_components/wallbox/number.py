@@ -26,7 +26,7 @@ from .const import (
     CHARGER_SERIAL_NUMBER_KEY,
     DOMAIN,
 )
-from .coordinator import InvalidAuth, WallboxCoordinator
+from .coordinator import InvalidAuth, WallboxCoordinator, TooManyCallsError
 from .entity import WallboxEntity
 
 
@@ -95,6 +95,9 @@ async def async_setup_entry(
         return
     except ConnectionError as exc:
         raise PlatformNotReady from exc
+    except TooManyCallsError as exc:
+        # do nothing and create entities without setting values
+        pass
 
     async_add_entities(
         WallboxNumber(coordinator, entry, description)
