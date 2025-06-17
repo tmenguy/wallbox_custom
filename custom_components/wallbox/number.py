@@ -86,6 +86,10 @@ async def async_setup_entry(
 ) -> None:
     """Create wallbox number entities in HASS."""
     coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+    if not coordinator.data:
+        raise PlatformNotReady("No data available from Wallbox API")
+
     # Check if the user has sufficient rights to change values, if so, add number component:
     try:
         await coordinator.async_set_charging_current(

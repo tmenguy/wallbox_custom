@@ -10,8 +10,9 @@ from requests import HTTPError
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.exceptions import PlatformNotReady
 
 from .const import (
     CHARGER_DATA_KEY,
@@ -63,6 +64,10 @@ async def async_setup_entry(
 ) -> None:
     """Create wallbox select entities in HASS."""
     coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+    if not coordinator.data:
+        raise PlatformNotReady("No data available from Wallbox API")
+
     if coordinator.data[CHARGER_ECO_SMART_KEY] != EcoSmartMode.DISABLED:
         async_add_entities(
             WallboxSelect(coordinator, description)
