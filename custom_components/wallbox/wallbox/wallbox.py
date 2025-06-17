@@ -3,7 +3,7 @@
 Wallbox class
 
 """
-
+import logging
 from datetime import datetime
 from requests.auth import HTTPBasicAuth
 import requests
@@ -11,6 +11,8 @@ import json
 
 from .bearerauth import BearerAuth
 
+
+_LOGGER = logging.getLogger(__name__)
 
 class Wallbox:
     def __init__(self, username, password, requestGetTimeout = None, jwtTokenDrift = 0):
@@ -73,6 +75,7 @@ class Wallbox:
                     self.jwtTokenTtl = 0
                     self.jwtRefreshTokenTtl = 0
                     self.jwtTokenRefreshRetries = 0
+                    _LOGGER.warning("Failed to refresh Wallbox token after 3 attempts, resetting tokens.")
                 else:
                     self.jwtTokenRefreshRetries += 1
 

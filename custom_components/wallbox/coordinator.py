@@ -7,6 +7,7 @@ from datetime import timedelta
 from http import HTTPStatus
 import logging
 from typing import Any, Concatenate
+from time import time
 
 import requests
 try:
@@ -17,7 +18,10 @@ except Exception:
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+
+
 
 from .const import (
     CHARGER_CURRENCY_KEY,
@@ -43,6 +47,11 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+class TooManyCallsError(HomeAssistantError):
+    """A validation exception occurred when calling a service."""
+
+COOLING_UPDATES_SECONDS = 60
 
 # Translation of StatusId based on Wallbox portal code:
 # https://my.wallbox.com/src/utilities/charger/chargerStatuses.js
@@ -93,6 +102,8 @@ def _require_authentication[_WallboxCoordinatorT: WallboxCoordinator, **_P](
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == HTTPStatus.FORBIDDEN:
                 raise ConfigEntryAuthFailed from wallbox_connection_error
+            if wallbox_connection_error.response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
+                raise TooManyCallsError from wallbox_connection_error
             raise ConnectionError from wallbox_connection_error
 
     return require_authentication
@@ -132,6 +143,26 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             name=DOMAIN,
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
+        self._got_throttled_at_time: float | None = None
+        self.assumed_state = False
+
+        self._has_already_worked = False
+
+    def set_throttled(self) -> None:
+        """We got throttled, we need to adjust the rate limit."""
+        if self._got_throttled_at_time is None:
+            self._got_throttled_at_time = time()
+
+    def is_throttled(self) -> bool:
+        """Check if we are throttled."""
+        if self._got_throttled_at_time is None:
+            return False
+
+        if time() - self._got_throttled_at_time > COOLING_UPDATES_SECONDS:
+            self._got_throttled_at_time = None
+            return False
+
+        return True
 
     def authenticate(self) -> None:
         """Authenticate using Wallbox API."""
@@ -193,7 +224,32 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Get new sensor data for Wallbox component."""
-        return await self.hass.async_add_executor_job(self._get_data)
+
+        if self.is_throttled():
+            if not self._has_already_worked:
+                raise UpdateFailed("Wallbox currently throttled: init skipped")
+            # we have been throttled and decided to cooldown
+            # so do not count this update as an error
+            # coordinator. last_update_success should still be ok
+            self.logger.debug("Wallbox currently throttled: scan skipped")
+            self.assumed_state = True
+            return self.data
+
+
+        try:
+            data = await self.hass.async_add_executor_job(self._get_data)
+            self._has_already_worked = True
+            self.assumed_state = False
+            return data
+        except TooManyCallsError as err:
+            self.set_throttled()
+            if not self._has_already_worked:
+                self.assumed_state = True
+                self.logger.warning("Wallbox API throttled, give back data! %s", err)
+                return self.data
+            raise UpdateFailed(f"Wallbox API throttled: {err}") from err
+
+
 
     @_require_authentication
     def _set_charging_current(self, charging_current: float) -> None:
