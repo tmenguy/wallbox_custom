@@ -231,7 +231,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # we have been throttled and decided to cooldown
             # so do not count this update as an error
             # coordinator. last_update_success should still be ok
-            self.logger.debug("Wallbox currently throttled: scan skipped")
+            self.logger.warning("Wallbox currently throttled: scan skipped")
             self.assumed_state = True
             return self.data
 
@@ -243,7 +243,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return data
         except TooManyCallsError as err:
             self.set_throttled()
-            if not self._has_already_worked:
+            if self._has_already_worked:
                 self.assumed_state = True
                 self.logger.warning("Wallbox API throttled, give back data! %s", err)
                 return self.data
