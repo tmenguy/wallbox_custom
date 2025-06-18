@@ -51,7 +51,7 @@ _LOGGER = logging.getLogger(__name__)
 class TooManyCallsError(HomeAssistantError):
     """A validation exception occurred when calling a service."""
 
-COOLING_UPDATES_SECONDS = 60
+COOLING_UPDATES_SECONDS = 2*UPDATE_INTERVAL + 1
 
 # Translation of StatusId based on Wallbox portal code:
 # https://my.wallbox.com/src/utilities/charger/chargerStatuses.js
