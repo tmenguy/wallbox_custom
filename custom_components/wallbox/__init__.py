@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 try:
-    from .wallbox import Wallbox
+    from .wallbox.wallbox import Wallbox
 except Exception:
     from wallbox import Wallbox
 

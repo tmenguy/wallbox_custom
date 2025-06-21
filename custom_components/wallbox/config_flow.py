@@ -8,7 +8,7 @@ from typing import Any
 import voluptuous as vol
 
 try:
-    from .wallbox import Wallbox
+    from .wallbox.wallbox import Wallbox
 except Exception:
     from wallbox import Wallbox
 

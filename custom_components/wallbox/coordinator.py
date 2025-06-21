@@ -11,7 +11,7 @@ from time import time
 
 import requests
 try:
-    from wallbox.wallbox import Wallbox
+    from .wallbox.wallbox import Wallbox
 except Exception:
     from wallbox import Wallbox
 
