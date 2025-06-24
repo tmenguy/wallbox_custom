@@ -6,7 +6,6 @@ from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
-
 try:
     from .wallbox.wallbox import Wallbox
 except Exception:

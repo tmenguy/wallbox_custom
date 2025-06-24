@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 from typing import cast
 
 from homeassistant.components.sensor import (
@@ -23,7 +22,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.exceptions import PlatformNotReady
 
 from .const import (
     CHARGER_ADDED_DISCHARGED_ENERGY_KEY,
@@ -49,11 +47,6 @@ from .const import (
 )
 from .coordinator import WallboxCoordinator
 from .entity import WallboxEntity
-
-CHARGER_STATION = "station"
-UPDATE_INTERVAL = 30
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -182,9 +175,6 @@ async def async_setup_entry(
 ) -> None:
     """Create wallbox sensor entities in HASS."""
     coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
-
-    if not coordinator.data:
-        raise PlatformNotReady("No data available from Wallbox API")
 
     async_add_entities(
         WallboxSensor(coordinator, description)

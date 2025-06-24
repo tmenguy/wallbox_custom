@@ -40,8 +40,3 @@ class WallboxEntity(CoordinatorEntity[WallboxCoordinator]):
                 CHARGER_CURRENT_VERSION_KEY
             ],
         )
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return True if unable to access real state of the entity."""
-        return self.coordinator.assumed_state
