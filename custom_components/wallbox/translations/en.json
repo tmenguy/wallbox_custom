@@ -110,11 +110,11 @@
         }
     },
     "exceptions": {
-      "api_failed": {
-      "message": "Error communicating with Wallbox API"
-      },
-      "too_many_requests": {
-        "message": "Error communicating with Wallbox API, too many requests"
-      }
+        "api_failed": {
+            "message": "Error communicating with Wallbox API"
+        },
+        "too_many_requests": {
+            "message": "Error communicating with Wallbox API, too many requests"
+        }
     }
 }
